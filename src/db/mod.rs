@@ -28,3 +28,14 @@ pub fn insert_track(
         Ok(track) => Ok(track),
         Err(err) => Err(Error::new(ErrorKind::Other, err))}
 }
+
+pub fn get_track_by_id(
+    con: &mut SqliteConnection,
+    track_id: i32
+) -> Result<Track> {
+    use crate::schema::track::dsl::*;
+    
+    match track.find(track_id).first(con) {
+        Ok(t) => Ok(t),
+        Err(err) => Err(Error::new(ErrorKind::Other, err))}
+}
