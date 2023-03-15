@@ -10,7 +10,7 @@ diesel::table! {
         track_number -> Nullable<Integer>,
         genre -> Nullable<Text>,
         composer -> Nullable<Text>,
-        length -> Integer,
+        length -> Float,
         sample_rate -> Integer,
         codec -> Text,
         filepath -> Text,

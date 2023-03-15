@@ -2,6 +2,7 @@ use diesel::sqlite::SqliteConnection;
 use diesel::prelude::*;
 use dotenvy::dotenv;
 use std::env;
+use std::io::{Result, Error, ErrorKind};
 
 use crate::models::{NewTrack, Track};
 
@@ -18,11 +19,12 @@ pub fn init_connection() -> SqliteConnection {
 pub fn insert_track(
     con: &mut SqliteConnection,
     new_track: &NewTrack
-) -> Track {
+) -> Result<Track> {
     use crate::schema::track;
     
-    diesel::insert_into(track::table)
-            .values(new_track)
-            .get_result(con)
-            .expect("Error saving track")
+    match diesel::insert_into(track::table)
+                .values(new_track)
+                .get_result(con) {
+        Ok(track) => Ok(track),
+        Err(err) => Err(Error::new(ErrorKind::Other, err))}
 }

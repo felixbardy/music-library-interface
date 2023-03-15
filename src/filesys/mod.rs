@@ -1,62 +1,67 @@
 use id3::{Tag, TagLike, Error};
+use metadata::MediaFileMetadata;
+use metadata::StreamMetadata::AudioMetadata;
+
+use std::io::Result;
+use std::path::Path;
 
 use crate::models::NewTrack;
 
-mod id3tags;
-
 pub mod crawler;
 
-fn get_text_tag(tag: &str, tags: &Tag) -> Option<String> {
-    match tags.get(tag) {
-        Some(t) => match t.content().text() {
-            Some(text) => Some(text.to_string()),
-            None => None
-        },
+fn get_tag_content(tags: &Vec<(String, String)>, name: &str) -> Option<String>{
+    match tags.iter().find(|elt| elt.0 == name) {
+        Some(pair) => Some(pair.1.clone()),
         None => None
     }
 }
 
-fn get_int_tag(tag: &str, tags: &Tag) -> Option<i32> {
-    match tags.get(tag) {
-        Some(t) => match t.content().text() {
-            Some(text) => match text.parse::<i32>() {
-                Ok(num) => Some(num),
+fn get_codec(md: &MediaFileMetadata) -> Option<String> {
+    // We're only interested in the AudioMetadata
+    match md._streams_metadata.iter().find(
+        |smd| if let AudioMetadata(_) = smd {true}
+        else {false}
+    ) {
+        Some(AudioMetadata(data)) => Some(data.codec_desc.clone()),
+        Some(_) => None,
+        None => None,
+    }
+}
+
+pub fn get_track(path: &str) -> Result<NewTrack> {
+    // Extract metadata from file
+    let mut md = MediaFileMetadata::new(&path)?;
+    let md = md.include_tags(true);
+
+    // Generate NewTrack from metadata
+    Ok(NewTrack {
+        title: match md.title.as_ref() {
+            Some(title) => title.clone(),
+            // If no title is found, use the filename
+            None => Path::new(path).file_name().unwrap().to_str().unwrap().to_string()
+        },
+        artist: get_tag_content(&md.tags, "artist"),
+        album: get_tag_content(&md.tags, "album"),
+        album_artist: get_tag_content(&md.tags, "album_artist"),
+        composer: get_tag_content(&md.tags, "composer"),
+        track_number: match get_tag_content(&md.tags, "track") {
+            // If there is a track number, parse it to an i32
+            Some(track) => match track.parse::<i32>() {
+                Ok(n) => Some(n),
                 Err(_) => None
             },
             None => None
         },
-        None => None
-    }
-}
-
-fn default_title(path: &str) -> String {
-    let mut file = path.split('/').last().unwrap().to_string();
-    
-    if let Some(ext) = file.split('.').last() {
-        file = file.replace(&format!(".{}", ext), "");
-    }
-
-    return file;
-}
-
-pub fn get_track(path: &str) -> Result<NewTrack,Error> {
-    let tags = Tag::read_from_path(path)?;
-
-    let title = get_text_tag(id3tags::TITLE, &tags)
-                        .unwrap_or_else(|| default_title(path));
-    
-    Ok(NewTrack {
-        title,
-        artist: get_text_tag(id3tags::ARTIST, &tags),
-        album: get_text_tag(id3tags::ALBUM, &tags),
-        album_artist: get_text_tag(id3tags::ALBUM_ARTIST, &tags),
-        track_number: get_int_tag(id3tags::TRACK, &tags),
-        genre: get_text_tag(id3tags::GENRE, &tags),
-        composer: get_text_tag(id3tags::COMPOSER, &tags),
-        length: get_int_tag(id3tags::LENGTH, &tags).unwrap_or(0),
-        sample_rate: get_int_tag(id3tags::SAMPLE_RATE, &tags).unwrap_or(0),
-        codec: get_text_tag(id3tags::CODEC, &tags).unwrap_or("".to_string()),
-        filepath: path.to_string()
+        genre: get_tag_content(&md.tags, "genre"),
+        // Downcast f64 to f32
+        length: md._duration.unwrap() as f32,
+        // Downcast u64 to i32
+        sample_rate: match i32::try_from(md._bit_rate.unwrap_or(0)) {
+            Ok(rate) => rate,
+            Err(_) => 0
+        },
+        // If no codec is found, use "unknown"
+        codec: get_codec(md).unwrap_or("unknown".to_string()),
+        filepath: md.path.clone(),
     })
-
 }

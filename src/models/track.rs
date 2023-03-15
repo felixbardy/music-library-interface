@@ -12,7 +12,7 @@ pub struct Track {
     pub track_number: Option<i32>,
     pub genre: Option<String>,
     pub composer: Option<String>,
-    pub length: i32,
+    pub length: f32,
     pub sample_rate: i32,
     pub codec: String,
     pub filepath: String
@@ -30,7 +30,7 @@ pub struct NewTrack {
     pub track_number:   Option<i32>,
     pub genre:          Option<String>,
     pub composer:       Option<String>,
-    pub length:         i32,
+    pub length:         f32,
     pub sample_rate:    i32,
     pub codec:          String,
     pub filepath:       String

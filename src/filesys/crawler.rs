@@ -11,7 +11,7 @@ use super::get_track;
 type FilteredDirIter = Filter<fs::ReadDir,fn(&Result<DirEntry>) -> bool>;
 
 lazy_static! {
-    static ref TRACK_EXT: Regex = Regex::new(r"mp3|m4a|flac|ogg").unwrap();
+    static ref TRACK_EXT: Regex = Regex::new(r"mp3|m4a|flac|ogg|wav").unwrap();
 }
 
 /// Iterator crawling through a music library
@@ -202,7 +202,7 @@ impl LibraryCrawler {
                                     track_number: None,
                                     genre: None,
                                     composer: None,
-                                    length: 0,
+                                    length: 0.0,
                                     sample_rate: 0,
                                     codec: "unknown".to_string(),
                                     filepath: entry.path().to_str().unwrap().to_string()

@@ -9,9 +9,9 @@ CREATE TABLE "track" (
 	"track_number"	INTEGER,
 	"genre"	TEXT,
 	"composer"	TEXT,
-	"length"	INTEGER NOT NULL,
+	"length"	FLOAT NOT NULL,
 	"sample_rate"	INTEGER NOT NULL,
 	"codec"	TEXT NOT NULL,
-	"filepath"	TEXT NOT NULL,
+	"filepath"	TEXT UNIQUE NOT NULL,
 	PRIMARY KEY("local_id" AUTOINCREMENT)
 );

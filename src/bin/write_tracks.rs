@@ -12,13 +12,13 @@ fn main() {
         track_number: None,
         genre: Some(String::from("Chanson")),
         composer: None,
-        length: 120,
+        length: 120.0,
         sample_rate: 44100,
         codec: String::from("mp3"),
         filepath: String::from("/home/felix/Music/Les Cowboys Fringants/Les antipodes/1-02 Les maisons toutes pareilles.mp3")
     };
 
-    let track = db::insert_track(&mut connection, &new_track);
+    let track = db::insert_track(&mut connection, &new_track).unwrap();
 
     println!("Song id: {}", track.local_id.unwrap_or(-1));
 
