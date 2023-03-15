@@ -1,7 +1,6 @@
 use std::io::{Result, ErrorKind, Error};
 use std::{fs::{self, DirEntry}, iter::Filter};
 
-use diesel::expression::is_aggregate::No;
 use lazy_static::lazy_static;
 use regex::Regex;
 use crate::models::NewTrack;
@@ -15,6 +14,13 @@ lazy_static! {
     static ref TRACK_EXT: Regex = Regex::new(r"mp3|m4a|flac|ogg").unwrap();
 }
 
+/// Iterator crawling through a music library
+/// composed of two layers of directories:
+/// - Artists
+/// - Albums
+/// - Tracks
+/// 
+/// The iterator yields NewTrack objects until the whole library has been crawled 
 pub struct LibraryCrawler {
     pub root: String,
     current_artist: Option<String>,
@@ -37,6 +43,9 @@ fn filter_is_dir(elt: &Result<DirEntry>) -> bool {
     }
 }
 
+/**
+ * Filters entries to keep only tracks
+ */
 fn filter_is_track(elt: &Result<DirEntry>) -> bool {
     match elt {
         Ok(entry) => match entry.file_type() {
@@ -48,13 +57,13 @@ fn filter_is_track(elt: &Result<DirEntry>) -> bool {
             } else {
                 false
             },
-            Err(err) => false,
+            Err(_) => false,
         }
-        Err(err) => false
+        Err(_) => false
     }
 }
 
-impl<'a> LibraryCrawler {
+impl LibraryCrawler {
     pub fn new(root: &String) -> Result<LibraryCrawler> {
         Ok(LibraryCrawler {
             root: root.clone(),
@@ -71,6 +80,7 @@ impl<'a> LibraryCrawler {
 
     /// Sets the next artist as the current artist
     /// and updates iterators accordingly
+    /// or returns None if there is no next artist
     fn next_artist(&mut self) -> Result<Option<String>> {
        match self.artist_iter.as_mut().unwrap().next() {
             // If there is a next artist, assign it to current_artist
@@ -119,6 +129,9 @@ impl<'a> LibraryCrawler {
         }
     }
 
+    /// Sets the next album as the current album
+    /// and updates iterators accordingly
+    /// or returns None if there is no next album
     fn next_album(&mut self) -> Result<Option<String>> {
         match self.album_iter.as_mut() {
             // If there is no album iterator,
@@ -156,6 +169,8 @@ impl<'a> LibraryCrawler {
         }
     }
     
+    /// Returns the next track in the library
+    /// or None if there is no next track
     fn next_track(&mut self) -> Result<Option<NewTrack>> {
         match self.track_iter.as_mut() {
             Some(iter) => {
@@ -178,7 +193,7 @@ impl<'a> LibraryCrawler {
 
                                 Ok(Some(track))
                             },
-                            Err(err) => Ok(Some(
+                            Err(_) => Ok(Some(
                                     NewTrack {
                                     title: entry.file_name().into_string().unwrap().to_string(),
                                     artist: self.current_artist.clone(),
@@ -218,13 +233,13 @@ impl Iterator for LibraryCrawler {
                         match self.next_artist() {
                             Ok(Some(_)) => self.next(),
                             Ok(None) => None,
-                            Err(err) => None
+                            Err(_) => None
                         }
                     },
-                    Err(err) => None
+                    Err(_) => None
                 }
             },
-            Err(err) => None
+            Err(_) => None
         }
     }
 }

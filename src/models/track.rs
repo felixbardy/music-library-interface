@@ -2,6 +2,7 @@ use diesel::prelude::*;
 use crate::schema::track;
 
 #[derive(Queryable)]
+/// A track in the database
 pub struct Track {
     pub local_id: Option<i32>,
     pub title: String,
@@ -20,6 +21,7 @@ pub struct Track {
 
 #[derive(Insertable)]
 #[diesel(table_name = track)]
+/// A track that is not yet in the database
 pub struct NewTrack {
     pub title:          String,
     pub artist:         Option<String>,
