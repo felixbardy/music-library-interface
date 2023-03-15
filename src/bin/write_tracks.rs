@@ -22,7 +22,7 @@ fn main() {
 
     println!("Song id: {}", track.local_id.unwrap_or(-1));
 
-    let fs_track = fs::get_track(&track.filepath).unwrap();
+    let fs_track = filesys::get_track(&track.filepath).unwrap();
 
     println!("Song title: {}", fs_track.title);
     println!("Song artist: {}", fs_track.artist.unwrap_or("None".to_string()));

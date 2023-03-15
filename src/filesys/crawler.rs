@@ -6,6 +6,8 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use crate::models::NewTrack;
 
+use super::get_track;
+
 // Iterator on directories
 type FilteredDirIter = Filter<fs::ReadDir,fn(&Result<DirEntry>) -> bool>;
 
@@ -159,24 +161,39 @@ impl<'a> LibraryCrawler {
             Some(iter) => {
                 match iter.next() {
                     Some(Ok(entry)) => {
-                        //TODO Construct new track
-                        //TODO Complete missing metadata
-                        //TODO Return track
-                        Ok(Some(
-                            NewTrack {
-                                title: entry.file_name().into_string().unwrap(),
-                                artist: self.current_artist.clone(),
-                                album: self.current_album.clone(),
-                                album_artist: None,
-                                track_number: None,
-                                genre: None,
-                                composer: None,
-                                length: 120,
-                                sample_rate: 44100,
-                                codec: "mp3".to_string(),
-                                filepath: entry.path().to_str().unwrap().to_string(),
-                            }
-                        ))
+                        // Construct new track
+                        // Complete missing metadata
+                        // Return track
+                        let result = get_track(
+                            &entry.path().to_str().unwrap().to_string()
+                        );
+                        match result {
+                            Ok(mut track) => {
+                                if let Some(_) = track.album {()} else {
+                                    track.album = self.current_album.clone()
+                                };
+                                if let Some(_) = track.artist {()} else {
+                                    track.artist = self.current_artist.clone()
+                                };
+
+                                Ok(Some(track))
+                            },
+                            Err(err) => Ok(Some(
+                                    NewTrack {
+                                    title: entry.file_name().into_string().unwrap().to_string(),
+                                    artist: self.current_artist.clone(),
+                                    album: self.current_album.clone(),
+                                    album_artist: None,
+                                    track_number: None,
+                                    genre: None,
+                                    composer: None,
+                                    length: 0,
+                                    sample_rate: 0,
+                                    codec: "unknown".to_string(),
+                                    filepath: entry.path().to_str().unwrap().to_string()
+                                }
+                            ))
+                        }
                     },
                     Some(Err(err)) => Err(err),
                     None => Ok(None)

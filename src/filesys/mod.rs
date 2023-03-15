@@ -7,11 +7,26 @@ mod id3tags;
 pub mod crawler;
 
 fn get_text_tag(tag: &str, tags: &Tag) -> Option<String> {
-    tags.get(tag).map(|t| t.content().text().unwrap().to_string())
+    match tags.get(tag) {
+        Some(t) => match t.content().text() {
+            Some(text) => Some(text.to_string()),
+            None => None
+        },
+        None => None
+    }
 }
 
 fn get_int_tag(tag: &str, tags: &Tag) -> Option<i32> {
-    tags.get(tag).map(|t| t.content().text().unwrap().parse::<i32>().unwrap())
+    match tags.get(tag) {
+        Some(t) => match t.content().text() {
+            Some(text) => match text.parse::<i32>() {
+                Ok(num) => Some(num),
+                Err(_) => None
+            },
+            None => None
+        },
+        None => None
+    }
 }
 
 fn default_title(path: &str) -> String {
