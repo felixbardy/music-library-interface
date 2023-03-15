@@ -15,7 +15,7 @@ fn main() {
     for t in results {
         println!("{}", t.title);
         println!("-----------");
-        println!("Id: {}", t.local_id.unwrap_or(-1));
+        println!("Id: {}", t.local_id);
         println!("Artist: {}", t.artist.unwrap_or("None".to_string()));
     }
 }

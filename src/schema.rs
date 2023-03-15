@@ -2,7 +2,7 @@
 
 diesel::table! {
     track (local_id) {
-        local_id -> Nullable<Integer>,
+        local_id -> Integer,
         title -> Text,
         artist -> Nullable<Text>,
         album -> Nullable<Text>,

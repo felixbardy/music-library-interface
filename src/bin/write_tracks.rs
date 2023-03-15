@@ -20,7 +20,7 @@ fn main() {
 
     let track = db::insert_track(&mut connection, &new_track).unwrap();
 
-    println!("Song id: {}", track.local_id.unwrap_or(-1));
+    println!("Song id: {}", track.local_id);
 
     let fs_track = filesys::get_track(&track.filepath).unwrap();
 

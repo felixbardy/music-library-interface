@@ -4,7 +4,7 @@ use crate::schema::track;
 #[derive(Queryable)]
 /// A track in the database
 pub struct Track {
-    pub local_id: Option<i32>,
+    pub local_id: i32,
     pub title: String,
     pub artist: Option<String>,
     pub album: Option<String>,
