@@ -7,7 +7,7 @@ use crate::models::NewTrack;
 
 use super::get_track;
 
-// Iterator on directories
+/// Iterator on filtered directories
 type FilteredDirIter = Filter<fs::ReadDir,fn(&Result<DirEntry>) -> bool>;
 
 lazy_static! {
@@ -20,7 +20,7 @@ lazy_static! {
 /// - Albums
 /// - Tracks
 /// 
-/// The iterator yields NewTrack objects until the whole library has been crawled 
+/// The iterator yields [`NewTrack`] objects until the whole library has been crawled 
 pub struct LibraryCrawler {
     pub root: String,
     current_artist: Option<String>,
@@ -30,9 +30,8 @@ pub struct LibraryCrawler {
     track_iter: Option<FilteredDirIter>
 }
 
-/**
- * Filters entries to keep only directories
- */
+
+/// Filters entries to keep only directories
 fn filter_is_dir(elt: &Result<DirEntry>) -> bool {
     match elt {
         Ok(entry) => match entry.file_type() {
@@ -43,9 +42,8 @@ fn filter_is_dir(elt: &Result<DirEntry>) -> bool {
     }
 }
 
-/**
- * Filters entries to keep only tracks
- */
+
+/// Filters entries to keep only tracks
 fn filter_is_track(elt: &Result<DirEntry>) -> bool {
     match elt {
         Ok(entry) => match entry.file_type() {
@@ -64,7 +62,13 @@ fn filter_is_track(elt: &Result<DirEntry>) -> bool {
 }
 
 impl LibraryCrawler {
-    pub fn new(root: &String) -> Result<LibraryCrawler> {
+    /// Tries to create a [`LibraryCrawler`] with the given root.
+    ///
+    /// # Errors
+    ///
+    /// Errors if the initialisation fails
+    /// (most likely because the root is unreadable).
+    pub fn try_new(root: &String) -> Result<LibraryCrawler> {
         Ok(LibraryCrawler {
             root: root.clone(),
             current_artist: None,
@@ -81,6 +85,12 @@ impl LibraryCrawler {
     /// Sets the next artist as the current artist
     /// and updates iterators accordingly
     /// or returns None if there is no next artist
+    ///
+    /// # Errors
+    ///
+    /// This function will error if:
+    /// - the next album directory cannot be read
+    /// - something goes horribly wrong with the path.
     fn next_artist(&mut self) -> Result<Option<String>> {
        match self.artist_iter.as_mut().unwrap().next() {
             // If there is a next artist, assign it to current_artist

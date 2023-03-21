@@ -1,4 +1,3 @@
-use id3::{Tag, TagLike, Error};
 use metadata::MediaFileMetadata;
 use metadata::StreamMetadata::AudioMetadata;
 
