@@ -1,23 +1,24 @@
-use diesel::sqlite::SqliteConnection;
+use diesel::sqlite::{SqliteConnection, Sqlite};
 use diesel::prelude::*;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
 use std::env;
 use std::io::{Result, Error, ErrorKind};
 
 use crate::models::{NewTrack, Track};
 
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+
 /// Initializes a connection to the given database
 /// and returns the database connection.
 /// 
 /// Falls back to the `DATABASE_URL` environment variable if no url is given.
 ///
-/// # Panics
-///
-/// Panics if :
-/// - No url is given and the DATABASE_URL environment variable is not set \
-/// #### OR
-/// - The connection to the database fails
-pub fn init_connection(link: Option<&String>) -> SqliteConnection {
+/// # Errors
+/// 
+/// This function will return an error if the connection fails or, in case the
+/// connection succeeds, if the migrations fail.
+pub fn init_connection(link: Option<String>) -> Result<SqliteConnection> {
     dotenv().ok();
 
     let db_url = match link {
@@ -25,8 +26,23 @@ pub fn init_connection(link: Option<&String>) -> SqliteConnection {
         None => env::var("DATABASE_URL").expect("DATABASE_URL was not given!")
     };
 
-    SqliteConnection::establish(&db_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", db_url))
+    let mut con = match SqliteConnection::establish(&db_url) {
+        Ok(con) => con,
+        Err(err) => return Err(Error::new(ErrorKind::Other, err))
+    };
+    
+    match run_migrations(&mut con) {
+        Ok(_) => Ok(con),
+        Err(err) => Err(err)
+    }
+}
+
+fn run_migrations(con: &mut impl MigrationHarness<Sqlite>) -> Result<()>{
+
+    match con.run_pending_migrations(MIGRATIONS) {
+        Ok(_) => Ok(()),
+        Err(_) => Err(Error::new(ErrorKind::Other, "Error running migrations"))
+    }
 }
 
 /// Inserts the given track into the given database

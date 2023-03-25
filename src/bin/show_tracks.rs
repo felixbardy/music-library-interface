@@ -4,7 +4,7 @@ use music_library_interface::*;
 fn main() {
     use self::schema::track::dsl::*;
 
-    let connection = &mut db::init_connection(None);
+    let connection = &mut db::init_connection(None).unwrap();
     let results = track
         .filter(artist.eq("ABBA"))
         .limit(5)

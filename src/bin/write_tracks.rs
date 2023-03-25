@@ -2,7 +2,7 @@ use music_library_interface::{*, models::NewTrack};
 
 fn main() {
 
-    let mut connection = &mut db::init_connection(None);
+    let mut connection = &mut db::init_connection(None).unwrap();
 
     let new_track = NewTrack {
         title: String::from("Les étoiles filantes"),
