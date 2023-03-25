@@ -5,7 +5,10 @@ use dotenvy::dotenv;
 use std::env;
 use std::io::{Result, Error, ErrorKind};
 
+use crate::filesys::utils::get_track;
 use crate::models::{NewTrack, Track};
+
+pub mod track;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
@@ -37,7 +40,7 @@ pub fn init_connection(link: Option<String>) -> Result<SqliteConnection> {
     }
 }
 
-fn run_migrations(con: &mut impl MigrationHarness<Sqlite>) -> Result<()>{
+pub fn run_migrations(con: &mut impl MigrationHarness<Sqlite>) -> Result<()>{
 
     match con.run_pending_migrations(MIGRATIONS) {
         Ok(_) => Ok(()),
@@ -45,39 +48,28 @@ fn run_migrations(con: &mut impl MigrationHarness<Sqlite>) -> Result<()>{
     }
 }
 
-/// Inserts the given track into the given database
-/// and returns the inserted value.
-///
-/// # Errors
-///
-/// This function will return an error if the insert fails.
-pub fn insert_track(
-    con: &mut SqliteConnection,
-    new_track: &NewTrack
-) -> Result<Track> {
-    use crate::schema::track;
-    
-    match diesel::insert_into(track::table)
-                .values(new_track)
-                .get_result(con) {
-        Ok(track) => Ok(track),
-        Err(err) => Err(Error::new(ErrorKind::Other, err))}
+pub fn load_library(root: &String, db: &mut SqliteConnection) -> Result<()> {
+    use crate::filesys::lib_iter::LibIter;
+    use crate::db::track::insert_track;
+
+    let lib_iter = LibIter::try_new(root)?;
+
+    for artist_iter in lib_iter {
+        for album_iter in artist_iter {
+            for trackpath in album_iter {
+                match get_track(&trackpath) {
+                    Ok(new_track) => {
+                        match insert_track(db, &new_track) {
+                            Ok(_) => (),
+                            Err(err) => println!("Error inserting track: {}", err)
+                        }
+                    },
+                    Err(err) => println!("Error parsing track: {}", err)
+                }
+            }
+        }
+    };
+    Ok(())
 }
 
-/// Queries the given database to find a track with the given ID.
-/// 
-/// Returns the track if found, otherwise returns an error
-///
-/// # Errors
-///
-/// This function will return an error if the query fails for any reason.
-pub fn get_track_by_id(
-    con: &mut SqliteConnection,
-    track_id: i32
-) -> Result<Track> {
-    use crate::schema::track::dsl::*;
-    
-    match track.find(track_id).first(con) {
-        Ok(t) => Ok(t),
-        Err(err) => Err(Error::new(ErrorKind::Other, err))}
-}
+

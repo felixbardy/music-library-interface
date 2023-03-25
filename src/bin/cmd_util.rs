@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use clap_generate::generators::{generate, Zsh};
-use music_library_interface::{filesys::crawler::LibraryCrawler, db};
+use music_library_interface::db;
 
 #[derive(Parser)]
 struct Cli {
@@ -45,14 +45,10 @@ fn main() {
                     return;
                 }
             };
-            let crawler = LibraryCrawler::try_new(&root.unwrap()).unwrap();
-            for track in crawler {
-                match db::insert_track(&mut connection, &track) {
-                    Ok(_) => (),
-                    Err(err) => eprintln!(
-                        "Error inserting track {}: {}", track.title, err
-                    )
-                }
+            
+            match db::load_library(&root.unwrap(), &mut connection) {
+                Ok(_) => (),
+                Err(err) => eprintln!("Error loading library: {}", err)
             }
         },
         Commands::Add { track } => ()

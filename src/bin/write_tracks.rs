@@ -18,11 +18,11 @@ fn main() {
         filepath: String::from("/home/felix/Music/Les Cowboys Fringants/Les antipodes/1-02 Les maisons toutes pareilles.mp3")
     };
 
-    let track = db::insert_track(&mut connection, &new_track).unwrap();
+    let track = db::track::insert_track(&mut connection, &new_track).unwrap();
 
     println!("Song id: {}", track.local_id);
 
-    let fs_track = filesys::get_track(&track.filepath).unwrap();
+    let fs_track = filesys::utils::get_track(&track.filepath).unwrap();
 
     println!("Song title: {}", fs_track.title);
     println!("Song artist: {}", fs_track.artist.unwrap_or("None".to_string()));
