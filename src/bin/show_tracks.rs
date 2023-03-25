@@ -2,10 +2,10 @@ use diesel::prelude::*;
 use music_library_interface::*;
 
 fn main() {
-    use self::schema::track::dsl::*;
+    use self::schema::tracks::dsl::*;
 
     let connection = &mut db::init_connection(None).unwrap();
-    let results = track
+    let results = tracks
         .filter(artist.eq("ABBA"))
         .limit(5)
         .load::<self::models::Track>(connection)

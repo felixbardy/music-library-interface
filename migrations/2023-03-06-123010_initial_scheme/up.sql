@@ -1,7 +1,7 @@
 -- Your SQL goes here
 -- Your SQL goes here
-CREATE TABLE "track" (
-	"local_id"	INTEGER UNIQUE,
+CREATE TABLE "tracks" (
+	"local_id"	INTEGER UNIQUE NOT NULL,
 	"title"	TEXT NOT NULL,
 	"artist"	TEXT,
 	"album"	TEXT,

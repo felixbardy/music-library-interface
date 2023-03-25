@@ -8,8 +8,6 @@ use std::io::{Result, Error, ErrorKind};
 use crate::filesys::utils::get_track;
 use crate::models::{NewTrack, Track};
 
-pub mod track;
-
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 /// Initializes a connection to the given database
@@ -50,7 +48,6 @@ pub fn run_migrations(con: &mut impl MigrationHarness<Sqlite>) -> Result<()>{
 
 pub fn load_library(root: &String, db: &mut SqliteConnection) -> Result<()> {
     use crate::filesys::lib_iter::LibIter;
-    use crate::db::track::insert_track;
 
     let lib_iter = LibIter::try_new(root)?;
 
@@ -59,7 +56,7 @@ pub fn load_library(root: &String, db: &mut SqliteConnection) -> Result<()> {
             for trackpath in album_iter {
                 match get_track(&trackpath) {
                     Ok(new_track) => {
-                        match insert_track(db, &new_track) {
+                        match Track::insert(new_track, db) {
                             Ok(_) => (),
                             Err(err) => println!("Error inserting track: {}", err)
                         }
