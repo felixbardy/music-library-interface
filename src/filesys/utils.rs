@@ -8,6 +8,7 @@ use metadata::StreamMetadata::AudioMetadata;
 
 use metadata::MediaFileMetadata;
 
+/// Extracts the content of a tag from a vector of tags
 pub(crate) fn get_tag_content(tags: &Vec<(String, String)>, name: &str) -> Option<String> {
     match tags.iter().find(|elt| elt.0 == name) {
         Some(pair) => Some(pair.1.clone()),
@@ -15,6 +16,7 @@ pub(crate) fn get_tag_content(tags: &Vec<(String, String)>, name: &str) -> Optio
     }
 }
 
+/// Extracts the optional codec from a MediaFileMetadata
 pub(crate) fn get_codec(md: &MediaFileMetadata) -> Option<String> {
     // We're only interested in the AudioMetadata
     match md._streams_metadata.iter().find(|smd| {
@@ -30,6 +32,11 @@ pub(crate) fn get_codec(md: &MediaFileMetadata) -> Option<String> {
     }
 }
 
+/// Extracts metadata from a file and returns a [`NewTrack`]
+/// 
+/// # Errors
+/// 
+/// This function will return an error if the file cannot be read.
 pub fn get_track(path: &str) -> Result<NewTrack> {
     // Extract metadata from file
     let mut md = MediaFileMetadata::new(&path)?;

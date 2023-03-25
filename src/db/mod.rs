@@ -5,9 +5,13 @@ use dotenvy::dotenv;
 use std::env;
 use std::io::{Result, Error, ErrorKind};
 
-use crate::filesys::utils::get_track;
-use crate::models::{NewTrack, Track};
+use crate::filesys::{
+    utils::get_track,
+    lib_iter::LibIter
+};
+use crate::models::Track;
 
+/// The database migrations, embedded into the binary
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 /// Initializes a connection to the given database
@@ -38,6 +42,11 @@ pub fn init_connection(link: Option<String>) -> Result<SqliteConnection> {
     }
 }
 
+/// Runs the embedded database migrations on the given connection.
+/// 
+/// # Errors
+/// 
+/// This function will return an error if the migrations fail.
 pub fn run_migrations(con: &mut impl MigrationHarness<Sqlite>) -> Result<()>{
 
     match con.run_pending_migrations(MIGRATIONS) {
@@ -46,8 +55,13 @@ pub fn run_migrations(con: &mut impl MigrationHarness<Sqlite>) -> Result<()>{
     }
 }
 
+/// Loads the library from the given root directory into the given database.
+/// 
+/// # Errors
+/// 
+/// This function will return an error if the [`LibIter`]
+/// cannot be created
 pub fn load_library(root: &String, db: &mut SqliteConnection) -> Result<()> {
-    use crate::filesys::lib_iter::LibIter;
 
     let lib_iter = LibIter::try_new(root)?;
 
@@ -58,10 +72,10 @@ pub fn load_library(root: &String, db: &mut SqliteConnection) -> Result<()> {
                     Ok(new_track) => {
                         match Track::insert(new_track, db) {
                             Ok(_) => (),
-                            Err(err) => println!("Error inserting track: {}", err)
+                            Err(err) => eprintln!("Error inserting track: {}", err)
                         }
                     },
-                    Err(err) => println!("Error parsing track: {}", err)
+                    Err(err) => eprintln!("Error parsing track: {}", err)
                 }
             }
         }

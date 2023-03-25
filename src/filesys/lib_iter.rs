@@ -53,11 +53,13 @@ fn filter_is_track(elt: &Result<DirEntry>) -> bool {
     }
 }
 
+/// An iterator over a library, yielding [`ArtistIter`]s
 pub struct LibIter {
     pub root: String,
     iter: Option<FilteredDirIter>
 }
 
+/// An iterator over an artist, yielding [`AlbumIter`]s
 pub struct ArtistIter {
     root: String,
     artist: String,
@@ -68,12 +70,13 @@ impl ArtistIter {
     pub fn root(&self) -> &str {
         self.root.as_ref()
     }
-
+    
     pub fn artist(&self) -> &str {
         self.artist.as_ref()
     }
 }
 
+/// An iterator over an album, yielding [`NewTrack`]s
 pub struct AlbumIter {
     root: String,
     artist: String,
@@ -94,6 +97,12 @@ impl AlbumIter {
         self.album.as_ref()
     }
 
+    /// Returns the next track in the album as a [`NewTrack`] or `None` if there
+    /// are no more tracks in the album.
+    /// 
+    /// # Errors
+    /// 
+    /// This function will return an error if the next track cannot be read.
     pub fn next_as_newtrack(&mut self) -> Result<Option<NewTrack>> {
         match &mut self.iter {
             Some(it) => match it.next() {
@@ -117,6 +126,11 @@ impl AlbumIter {
 }
 
 impl LibIter {
+    /// Creates a new [`LibIter`] from a root path.
+    /// 
+    /// # Errors
+    /// 
+    /// This function will return an error if the root path cannot be read.
     pub fn try_new(root: &String) -> Result<Self> {
         Ok(Self {
             root: root.clone(),
