@@ -1,23 +1,16 @@
-use std::{
-    iter::Filter, 
-    fs::{
-        DirEntry,
-        self
-    }, 
-    io::{
-        Result,
-        Error,
-        ErrorKind
-    }
-};
 use lazy_static::lazy_static;
 use regex::Regex;
+use std::{
+    fs::{self, DirEntry},
+    io::{Error, ErrorKind, Result},
+    iter::Filter,
+};
 
 use crate::models::NewTrack;
 
 use super::utils::get_track;
 
-type FilteredDirIter = Filter<fs::ReadDir,fn(&Result<DirEntry>) -> bool>;
+type FilteredDirIter = Filter<fs::ReadDir, fn(&Result<DirEntry>) -> bool>;
 
 lazy_static! {
     /// Regex matching track extensions
@@ -39,38 +32,48 @@ fn filter_is_dir(elt: &Result<DirEntry>) -> bool {
 fn filter_is_track(elt: &Result<DirEntry>) -> bool {
     match elt {
         Ok(entry) => match entry.file_type() {
-            Ok(ft) => if ft.is_file() {
-                matches!(REGEX_TRACK_EXT.captures(
-                    &entry.path().extension().unwrap()
-                                .to_str().unwrap().to_string()
-                ), Some(_))
-            } else {
-                false
-            },
+            Ok(ft) => {
+                if ft.is_file() {
+                    matches!(
+                        REGEX_TRACK_EXT.captures(
+                            &entry
+                                .path()
+                                .extension()
+                                .unwrap()
+                                .to_str()
+                                .unwrap()
+                                .to_string()
+                        ),
+                        Some(_)
+                    )
+                } else {
+                    false
+                }
+            }
             Err(_) => false,
-        }
-        Err(_) => false
+        },
+        Err(_) => false,
     }
 }
 
 /// An iterator over a library, yielding [`ArtistIter`]s
 pub struct LibIter {
     pub root: String,
-    iter: Option<FilteredDirIter>
+    iter: Option<FilteredDirIter>,
 }
 
 /// An iterator over an artist, yielding [`AlbumIter`]s
 pub struct ArtistIter {
     root: String,
     artist: String,
-    iter: Option<FilteredDirIter>
+    iter: Option<FilteredDirIter>,
 }
 
 impl ArtistIter {
     pub fn root(&self) -> &str {
         self.root.as_ref()
     }
-    
+
     pub fn artist(&self) -> &str {
         self.artist.as_ref()
     }
@@ -81,7 +84,7 @@ pub struct AlbumIter {
     root: String,
     artist: String,
     album: String,
-    iter: Option<FilteredDirIter>
+    iter: Option<FilteredDirIter>,
 }
 
 impl AlbumIter {
@@ -99,9 +102,9 @@ impl AlbumIter {
 
     /// Returns the next track in the album as a [`NewTrack`] or `None` if there
     /// are no more tracks in the album.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// This function will return an error if the next track cannot be read.
     pub fn next_as_newtrack(&mut self) -> Result<Option<NewTrack>> {
         match &mut self.iter {
@@ -116,28 +119,28 @@ impl AlbumIter {
                         track.artist = Some(self.artist().to_string());
                     };
                     Ok(Some(track))
-                },
+                }
                 Some(Err(_)) => Ok(None),
-                None => Ok(None)
+                None => Ok(None),
             },
-            None => Ok(None)
+            None => Ok(None),
         }
     }
 }
 
 impl LibIter {
     /// Creates a new [`LibIter`] from a root path.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// This function will return an error if the root path cannot be read.
     pub fn try_new(root: &String) -> Result<Self> {
         Ok(Self {
             root: root.clone(),
             iter: match fs::read_dir(root) {
                 Ok(it) => Some(it.filter(filter_is_dir)),
-                Err(err) => return Err(Error::new(ErrorKind::Other, err))
-            }
+                Err(err) => return Err(Error::new(ErrorKind::Other, err)),
+            },
         })
     }
 }
@@ -153,13 +156,13 @@ impl Iterator for LibIter {
                     artist: entry.file_name().into_string().unwrap(),
                     iter: match fs::read_dir(entry.path()) {
                         Ok(it) => Some(it.filter(filter_is_dir)),
-                        Err(_) => None
-                    }
+                        Err(_) => None,
+                    },
                 }),
                 Some(Err(_)) => None,
-                None => None
+                None => None,
             },
-            None => None
+            None => None,
         }
     }
 }
@@ -176,13 +179,13 @@ impl Iterator for ArtistIter {
                     album: entry.file_name().into_string().unwrap(),
                     iter: match fs::read_dir(entry.path()) {
                         Ok(it) => Some(it.filter(filter_is_track)),
-                        Err(_) => None
-                    }
+                        Err(_) => None,
+                    },
                 }),
                 Some(Err(_)) => None,
-                None => None
+                None => None,
             },
-            None => None
+            None => None,
         }
     }
 }
@@ -195,9 +198,9 @@ impl Iterator for AlbumIter {
             Some(it) => match it.next() {
                 Some(Ok(entry)) => Some(entry.path().to_str().unwrap().to_string()),
                 Some(Err(_)) => None,
-                None => None
+                None => None,
             },
-            None => None
+            None => None,
         }
     }
 }

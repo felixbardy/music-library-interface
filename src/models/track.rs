@@ -1,5 +1,5 @@
-use diesel::prelude::*;
 use crate::schema::*;
+use diesel::prelude::*;
 
 #[derive(Queryable)]
 /// A track in the database
@@ -15,25 +15,24 @@ pub struct Track {
     pub length: f32,
     pub sample_rate: i32,
     pub codec: String,
-    pub filepath: String
+    pub filepath: String,
 }
-
 
 #[derive(Insertable)]
 #[diesel(table_name = tracks)]
 /// A track that is not yet in the database
 pub struct NewTrack {
-    pub title:          String,
-    pub artist:         Option<String>,
-    pub album:          Option<String>,
-    pub album_artist:   Option<String>,
-    pub track_number:   Option<i32>,
-    pub genre:          Option<String>,
-    pub composer:       Option<String>,
-    pub length:         f32,
-    pub sample_rate:    i32,
-    pub codec:          String,
-    pub filepath:       String
+    pub title: String,
+    pub artist: Option<String>,
+    pub album: Option<String>,
+    pub album_artist: Option<String>,
+    pub track_number: Option<i32>,
+    pub genre: Option<String>,
+    pub composer: Option<String>,
+    pub length: f32,
+    pub sample_rate: i32,
+    pub codec: String,
+    pub filepath: String,
 }
 
 impl Track {
@@ -44,14 +43,14 @@ impl Track {
 
     /// Get a track by id
     pub fn get(id: i32, conn: &mut SqliteConnection) -> QueryResult<Track> {
-        tracks::table.find(id)
-                    .get_result::<Track>(conn)
+        tracks::table.find(id).get_result::<Track>(conn)
     }
 
     /// Get a track by filepath
     pub fn get_by_filepath(filepath: &str, conn: &mut SqliteConnection) -> QueryResult<Track> {
-        tracks::table.filter(tracks::filepath.eq(filepath))
-                    .get_result::<Track>(conn)
+        tracks::table
+            .filter(tracks::filepath.eq(filepath))
+            .get_result::<Track>(conn)
     }
 
     /// Insert a new track
@@ -63,7 +62,6 @@ impl Track {
 
     /// Delete a track
     pub fn delete(id: i32, conn: &mut SqliteConnection) -> QueryResult<usize> {
-        diesel::delete(tracks::table.find(id))
-            .execute(conn)
+        diesel::delete(tracks::table.find(id)).execute(conn)
     }
 }

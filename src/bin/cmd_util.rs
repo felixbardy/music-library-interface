@@ -4,17 +4,14 @@ use music_library_interface::db;
 
 #[derive(Parser)]
 struct Cli {
-
     #[clap(subcommand)]
     command: Commands,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-
     /// Populate the database with tracks from a library directory
     Generate {
-
         /// Path to the database to fill or create
         #[clap(short, long, value_name = "DB_FILE")]
         database: Option<String>,
@@ -26,11 +23,10 @@ enum Commands {
 
     /// Add content to the database
     Add {
-        
         /// A track to add to the database
         #[clap(short, long, value_name = "TRACK_FILE")]
         track: String,
-    }
+    },
 }
 
 fn main() {
@@ -45,12 +41,12 @@ fn main() {
                     return;
                 }
             };
-            
+
             match db::load_library(&root.unwrap(), &mut connection) {
                 Ok(_) => (),
-                Err(err) => eprintln!("Error loading library: {}", err)
+                Err(err) => eprintln!("Error loading library: {}", err),
             }
-        },
-        Commands::Add { track } => ()
+        }
+        Commands::Add { track } => (),
     }
 }

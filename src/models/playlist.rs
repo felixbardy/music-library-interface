@@ -1,5 +1,5 @@
-use diesel::prelude::*;
 use crate::schema::*;
+use diesel::prelude::*;
 
 use super::Track;
 
@@ -9,7 +9,7 @@ pub struct Playlist {
     pub id: i32,
     pub name: String,
     pub description: Option<String>,
-    pub image_path: Option<String>
+    pub image_path: Option<String>,
 }
 
 #[derive(Insertable)]
@@ -18,7 +18,7 @@ pub struct Playlist {
 pub struct NewPlaylist {
     pub name: String,
     pub description: Option<String>,
-    pub image_path: Option<String>
+    pub image_path: Option<String>,
 }
 
 #[derive(Queryable)]
@@ -26,7 +26,7 @@ pub struct NewPlaylist {
 pub struct PlaylistTrack {
     pub playlist_id: i32,
     pub track_id: i32,
-    pub track_number: i32
+    pub track_number: i32,
 }
 
 #[derive(Insertable)]
@@ -35,7 +35,7 @@ pub struct PlaylistTrack {
 pub struct NewPlaylistTrack {
     pub playlist_id: i32,
     pub track_id: i32,
-    pub track_number: i32
+    pub track_number: i32,
 }
 
 impl Playlist {
@@ -58,18 +58,14 @@ impl Playlist {
 
     /// Delete a playlist
     pub fn delete(id: i32, conn: &mut SqliteConnection) -> QueryResult<usize> {
-        diesel::delete(playlists::table.find(id))
-            .execute(conn)
+        diesel::delete(playlists::table.find(id)).execute(conn)
     }
 
     /// Get all tracks in a playlist
     pub fn get_tracks(&self, conn: &mut SqliteConnection) -> QueryResult<Vec<Track>> {
-        playlist_tracks::table.filter(playlist_tracks::playlist_id.eq(self.id))
-            .inner_join(
-                tracks::table.on(
-                    playlist_tracks::track_id.eq(tracks::local_id)
-                )
-            )
+        playlist_tracks::table
+            .filter(playlist_tracks::playlist_id.eq(self.id))
+            .inner_join(tracks::table.on(playlist_tracks::track_id.eq(tracks::local_id)))
             .select(tracks::all_columns)
             .order(playlist_tracks::track_number)
             .load::<Track>(conn)
@@ -78,30 +74,40 @@ impl Playlist {
 
 impl PlaylistTrack {
     /// Insert a new playlist track
-    pub fn insert(playlist_track: NewPlaylistTrack, conn: &mut SqliteConnection) -> QueryResult<usize> {
+    pub fn insert(
+        playlist_track: NewPlaylistTrack,
+        conn: &mut SqliteConnection,
+    ) -> QueryResult<usize> {
         diesel::insert_into(playlist_tracks::table)
             .values(&playlist_track)
             .execute(conn)
     }
 
     /// Delete a playlist track
-    pub fn delete(playlist_id: i32, track_id: i32, conn: &mut SqliteConnection) -> QueryResult<usize> {
-        diesel::delete(playlist_tracks::table.filter(
-            playlist_tracks::playlist_id.eq(playlist_id)
-                .and(playlist_tracks::track_id.eq(track_id))
-        ))
+    pub fn delete(
+        playlist_id: i32,
+        track_id: i32,
+        conn: &mut SqliteConnection,
+    ) -> QueryResult<usize> {
+        diesel::delete(
+            playlist_tracks::table.filter(
+                playlist_tracks::playlist_id
+                    .eq(playlist_id)
+                    .and(playlist_tracks::track_id.eq(track_id)),
+            ),
+        )
         .execute(conn)
     }
 
     /// Get the corresponding track
     pub fn get_track(&self, conn: &mut SqliteConnection) -> QueryResult<Track> {
-        tracks::table.find(self.track_id)
-            .get_result::<Track>(conn)
+        tracks::table.find(self.track_id).get_result::<Track>(conn)
     }
 
     /// Get the corresponding playlist
     pub fn get_playlist(&self, conn: &mut SqliteConnection) -> QueryResult<Playlist> {
-        playlists::table.find(self.playlist_id)
+        playlists::table
+            .find(self.playlist_id)
             .get_result::<Playlist>(conn)
     }
 }

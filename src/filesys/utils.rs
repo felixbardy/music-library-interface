@@ -33,9 +33,9 @@ pub(crate) fn get_codec(md: &MediaFileMetadata) -> Option<String> {
 }
 
 /// Extracts metadata from a file and returns a [`NewTrack`]
-/// 
+///
 /// # Errors
-/// 
+///
 /// This function will return an error if the file cannot be read.
 pub fn get_track(path: &str) -> Result<NewTrack> {
     // Extract metadata from file
